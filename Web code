@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Suhel Shop • Live Ready</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
+  <style>
+    body { font-family: system-ui, sans-serif; }
+    .hero-bg { background: linear-gradient(135deg, #00ff88, #00ccff, #0088ff); animation: gradient 12s ease infinite; }
+    @keyframes gradient { 0%{background-position:0% 50%} 50%{background-position:100% 50%} 100%{background-position:0% 50%} }
+    .product-card:hover { transform: translateY(-8px); }
+    .emoji-big { font-size: 4.5rem; }
+  </style>
+</head>
+<body class="bg-zinc-950 text-white">
+
+  <!-- NAVBAR -->
+  <nav class="bg-black sticky top-0 z-50 border-b border-emerald-500">
+    <div class="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-11 h-11 bg-gradient-to-br from-emerald-400 to-cyan-400 rounded-2xl flex items-center justify-center text-4xl">SS</div>
+        <h1 class="text-4xl font-bold neon-green">SUHEL SHOP</h1>
+      </div>
+
+      <div class="hidden md:flex flex-1 max-w-xl mx-8">
+        <input id="searchInput" type="text" placeholder="Search products..." 
+               class="w-full bg-zinc-900 border border-emerald-400 rounded-3xl py-3 px-6 outline-none" onkeyup="filterProducts()">
+      </div>
+
+      <div class="flex items-center gap-7 text-2xl">
+        <i onclick="showAccountModal()" class="fas fa-user-circle cursor-pointer"></i>
+        <div onclick="toggleWishlist()" class="relative cursor-pointer">
+          <i class="fas fa-heart"></i>
+          <span id="wishlistCount" class="absolute -top-2 -right-2 bg-red-500 text-xs w-5 h-5 rounded-full flex items-center justify-center">0</span>
+        </div>
+        <div onclick="toggleCart()" class="relative cursor-pointer">
+          <i class="fas fa-shopping-bag"></i>
+          <span id="cartCount" class="absolute -top-2 -right-2 bg-emerald-500 text-xs w-5 h-5 rounded-full flex items-center justify-center">0</span>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- HERO -->
+  <div class="hero-bg h-96 flex items-center justify-center text-center">
+    <div>
+      <h1 class="text-6xl font-bold mb-4">SUHEL SHOP</h1>
+      <p class="text-2xl">Trendy Products • Instant Payment</p>
+      <p class="mt-4">+91 7455832589 • choudharysuhel31@gmail.com</p>
+    </div>
+  </div>
+
+  <!-- PRODUCTS -->
+  <div class="max-w-7xl mx-auto px-6 py-12">
+    <h2 class="text-4xl font-bold mb-8">All Products</h2>
+    <div id="productGrid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-8">
+      <!-- JS se fill hoga -->
+    </div>
+  </div>
+
+  <!-- CART -->
+  <div id="cartSidebar" class="hidden fixed inset-0 bg-black/80 z-50 flex justify-end">
+    <div class="bg-zinc-900 w-full max-w-md h-full overflow-auto p-6">
+      <div class="flex justify-between mb-6">
+        <h3 class="text-3xl font-bold">Your Cart</h3>
+        <button onclick="toggleCart()" class="text-4xl">×</button>
+      </div>
+      <div id="cartItems" class="space-y-6"></div>
+      <div class="mt-10">
+        <div class="flex justify-between text-2xl mb-4">
+          <span>Total</span>
+          <span id="cartTotal" class="font-bold">₹0</span>
+        </div>
+        <button onclick="showPaymentModal()" class="w-full py-5 bg-emerald-500 text-black font-bold rounded-3xl">Proceed to Pay</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- PAYMENT MODAL -->
+  <div id="paymentModal" class="hidden fixed inset-0 bg-black/80 z-[100] flex items-center justify-center">
+    <div class="bg-zinc-900 rounded-3xl max-w-lg w-full p-8">
+      <h2 class="text-4xl font-bold mb-6 text-center">Choose Payment</h2>
+      <p class="text-center text-emerald-400 mb-8">Total: <span id="payTotal" class="font-bold"></span></p>
+
+      <!-- Razorpay -->
+      <div onclick="initiateRazorpay()" class="flex items-center gap-6 p-6 border border-emerald-400 rounded-3xl mb-6 cursor-pointer hover:bg-emerald-900/30">
+        <i class="fas fa-credit-card text-5xl"></i>
+        <div>
+          <h4 class="text-xl font-semibold">Razorpay (Cards / UPI / Wallets)</h4>
+          <p class="text-sm text-zinc-400">Instant & Secure</p>
+        </div>
+      </div>
+
+      <!-- PhonePe -->
+      <div onclick="showPhonePeModal()" class="flex items-center gap-6 p-6 border border-purple-400 rounded-3xl mb-6 cursor-pointer hover:bg-purple-900/30">
+        <i class="fas fa-qrcode text-5xl"></i>
+        <div>
+          <h4 class="text-xl font-semibold">PhonePe / UPI</h4>
+          <p class="text-sm text-zinc-400">Scan QR or pay to +91 7455832589</p>
+        </div>
+      </div>
+
+      <button onclick="hidePaymentModal()" class="w-full py-4 text-zinc-400">Cancel</button>
+    </div>
+  </div>
+
+  <!-- PhonePe QR Modal -->
+  <div id="phonePeModal" class="hidden fixed inset-0 bg-black/90 z-[200] flex items-center justify-center">
+    <div class="bg-white text-black rounded-3xl p-8 max-w-sm w-full text-center">
+      <h3 class="text-3xl font-bold mb-6">Pay with PhonePe</h3>
+      <div class="bg-black p-6 rounded-3xl mb-6">
+        <img src="https://i.imgur.com/3vKzL9P.png" alt="PhonePe QR" class="mx-auto rounded-2xl" style="width:260px;height:260px">
+      </div>
+      <p class="mb-4">UPI: <span class="font-mono font-bold">+91 7455832589</span></p>
+      <p class="text-sm text-zinc-500 mb-8">After paying, send screenshot to choudharysuhel31@gmail.com</p>
+      <button onclick="hidePhonePeModal()" class="w-full py-5 bg-purple-600 text-white rounded-3xl font-semibold">Done</button>
+    </div>
+  </div>
+
+  <script>
+    // 40+ Products
+    let products = [
+      {id:1,name:"Neon Green Hoodie",price:2199,emoji:"🧥",cat:"fashion"},
+      {id:2,name:"Wireless Earbuds",price:1499,emoji:"🎧",cat:"electronics"},
+      {id:3,name:"Blue Cargo Jeans",price:1699,emoji:"👖",cat:"fashion"},
+      {id:4,name:"Vitamin C Serum",price:799,emoji:"🧴",cat:"beauty"},
+      {id:5,name:"RGB Keyboard",price:2899,emoji:"⌨️",cat:"electronics"},
+      {id:6,name:"Kids Dino Hoodie",price:999,emoji:"🦖",cat:"kids"},
+      {id:7,name:"LED Desk Lamp",price:1199,emoji:"💡",cat:"home"},
+      {id:8,name:"Cyan Sneakers",price:2499,emoji:"👟",cat:"fashion"},
+      {id:9,name:"Matte Lipstick Set",price:599,emoji:"💄",cat:"beauty"},
+      {id:10,name:"Coffee Mug Set",price:699,emoji:"☕",cat:"home"},
+      {id:11,name:"Holographic Sunglasses",price:899,emoji:"🕶️",cat:"accessories"},
+      {id:12,name:"Neckband Earphones",price:1299,emoji:"🎧",cat:"electronics"},
+      {id:13,name:"Oversized T-Shirt",price:799,emoji:"👕",cat:"fashion"},
+      {id:14,name:"Mini Drone",price:3499,emoji:"🚁",cat:"electronics"},
+      {id:15,name:"Unicorn Backpack",price:899,emoji:"🦄",cat:"kids"},
+      {id:16,name:"Aroma Diffuser",price:1299,emoji:"🪔",cat:"home"},
+      {id:17,name:"Cricket Bat Set",price:1599,emoji:"🏏",cat:"sports"},
+      {id:18,name:"Gold Chain",price:699,emoji:"📿",cat:"accessories"},
+      {id:19,name:"Wireless Mouse",price:799,emoji:"🖱️",cat:"electronics"},
+      {id:20,name:"Face Moisturizer",price:599,emoji:"🧴",cat:"beauty"}
+    ];
+
+    let cart = [];
+
+    function renderProducts(list) {
+      const grid = document.getElementById('productGrid');
+      grid.innerHTML = '';
+      list.forEach(item => {
+        grid.innerHTML += `
+          <div class="product-card bg-zinc-900 rounded-3xl p-4 text-center">
+            <div class="emoji-big mb-4">${item.emoji}</div>
+            <h4 class="font-medium mb-2">${item.name}</h4>
+            <p class="text-2xl text-emerald-400 font-bold mb-4">₹${item.price}</p>
+            <div class="flex gap-3">
+              <button onclick="addToCart(${item.id});event.stopImmediatePropagation()" 
+                      class="flex-1 py-3 bg-emerald-500 text-black rounded-3xl text-sm font-medium">Add to Cart</button>
+              <button onclick="buyNow(${item.id})" 
+                      class="flex-1 py-3 border border-white rounded-3xl text-sm font-medium">Buy Now</button>
+            </div>
+          </div>`;
+      });
+    }
+
+    function addToCart(id) {
+      const item = products.find(p => p.id === id);
+      const existing = cart.find(i => i.id === id);
+      if (existing) existing.quantity++;
+      else cart.push({...item, quantity: 1});
+      updateCartCount();
+      showToast(item.name + " added to cart");
+    }
+
+    function buyNow(id) {
+      const item = products.find(p => p.id === id);
+      cart = [{...item, quantity: 1}];
+      updateCartCount();
+      toggleCart();
+      setTimeout(showPaymentModal, 400);
+    }
+
+    function updateCartCount() {
+      const count = cart.reduce((sum, i) => sum + i.quantity, 0);
+      document.getElementById('cartCount').textContent = count;
+    }
+
+    function toggleCart() {
+      const sidebar = document.getElementById('cartSidebar');
+      const container = document.getElementById('cartItems');
+      let total = 0;
+      container.innerHTML = '';
+
+      cart.forEach((item, index) => {
+        const sub = item.price * item.quantity;
+        total += sub;
+        container.innerHTML += `
+          <div class="flex gap-4 bg-zinc-800 p-4 rounded-3xl">
+            <div class="text-5xl">${item.emoji}</div>
+            <div class="flex-1">
+              <p>${item.name}</p>
+              <p class="text-emerald-400">₹${item.price} × ${item.quantity}</p>
+            </div>
+            <div class="font-bold text-xl">₹${sub}</div>
+          </div>`;
+      });
+
+      document.getElementById('cartTotal').textContent = `₹${total}`;
+      sidebar.classList.toggle('hidden');
+    }
+
+    function showToast(msg) {
+      const toast = document.createElement('div');
+      toast.style.cssText = 'position:fixed;bottom:30px;left:50%;transform:translateX(-50%);background:#10b981;color:white;padding:14px 26px;border-radius:9999px;z-index:9999';
+      toast.textContent = msg;
+      document.body.appendChild(toast);
+      setTimeout(() => toast.remove(), 2500);
+    }
+
+    function showPaymentModal() {
+      if (cart.length === 0) return;
+      let total = cart.reduce((sum, i) => sum + i.price * i.quantity, 0);
+      document.getElementById('payTotal').textContent = `₹${total}`;
+      document.getElementById('paymentModal').classList.remove('hidden');
+    }
+
+    function hidePaymentModal() {
+      document.getElementById('paymentModal').classList.add('hidden');
+    }
+
+    function initiateRazorpay() {
+      hidePaymentModal();
+      const total = cart.reduce((sum, i) => sum + i.price * i.quantity, 0);
+      const options = {
+        key: "rzp_test_YOUR_KEY", // ← apna Razorpay test key yahan daal
+        amount: total * 100,
+        currency: "INR",
+        name: "Suhel Shop",
+        description: "Thank you for shopping!",
+        handler: function(response) {
+          alert("🎉 Payment Successful! ID: " + response.razorpay_payment_id);
+          cart = [];
+          updateCartCount();
+          toggleCart();
+        },
+        prefill: {
+          name: "Suhel Choudhary",
+          email: "choudharysuhel31@gmail.com",
+          contact: "7455832589"
+        },
+        theme: { color: "#10b981" }
+      };
+      new Razorpay(options).open();
+    }
+
+    function showPhonePeModal() {
+      hidePaymentModal();
+      document.getElementById('phonePeModal').classList.remove('hidden');
+    }
+
+    function hidePhonePeModal() {
+      document.getElementById('phonePeModal').classList.add('hidden');
+    }
+
+    function filterProducts() {
+      const term = document.getElementById('searchInput').value.toLowerCase();
+      const filtered = products.filter(p => p.name.toLowerCase().includes(term));
+      renderProducts(filtered);
+    }
+
+    function showAccountModal() {
+      alert("👋 Hi Suhel!\nEmail: choudharysuhel31@gmail.com\nPhone: +91 7455832589");
+    }
+
+    function toggleWishlist() {
+      alert("❤️ Wishlist feature coming soon!");
+    }
+
+    // Initialize
+    window.onload = () => {
+      renderProducts(products);
+      updateCartCount();
+      console.log("✅ Suhel Shop loaded with PhonePe + 20 products visible");
+    };
+  </script>
+</body>
+</html>
